@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/Stocktake/static/css/main.95153dc3.css",
+    "main.js": "/Stocktake/static/js/main.c3e7f020.js",
+    "static/js/453.95b23ced.chunk.js": "/Stocktake/static/js/453.95b23ced.chunk.js",
+    "index.html": "/Stocktake/index.html",
+    "main.95153dc3.css.map": "/Stocktake/static/css/main.95153dc3.css.map",
+    "main.c3e7f020.js.map": "/Stocktake/static/js/main.c3e7f020.js.map",
+    "453.95b23ced.chunk.js.map": "/Stocktake/static/js/453.95b23ced.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.95153dc3.css",
+    "static/js/main.c3e7f020.js"
+  ]
+}
