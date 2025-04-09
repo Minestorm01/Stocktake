@@ -1,1 +1,1 @@
-# Stocktakeapp
+// placeholder content for README.md
