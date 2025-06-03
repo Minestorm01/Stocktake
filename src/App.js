@@ -54,7 +54,7 @@ function App() {
       alert('⚠️ File not found or could not be deleted');
     }
   }
-
+console.log("✅ App component is running");
   return (
   <div className="App">
     <h1>Hello, world!</h1>
