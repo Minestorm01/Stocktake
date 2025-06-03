@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import Scanner from './components/Scanner';
 import Report from './components/Report';
@@ -13,21 +13,34 @@ function App() {
   const [filePath, setFilePath] = useState('');
   const [fileLoaded, setFileLoaded] = useState(false);
 
+  useEffect(() => {
+    const lastFile = localStorage.getItem('lastUsedFile');
+    if (lastFile) {
+      loadCsvFromGitHub(lastFile).then((data) => {
+        if (data) {
+          setCsvData(data);
+          setFilePath(lastFile);
+          setFileLoaded(true);
+          console.log(`📂 Auto-loaded ${lastFile} from memory.`);
+        }
+      });
+    }
+  }, []);
+
   async function handleUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
     const uploadedName = file.name.replace(/\s+/g, '-').toLowerCase();
     setFilePath(uploadedName);
+    localStorage.setItem('lastUsedFile', uploadedName);
 
-    // Try to load existing memory file
     const remote = await loadCsvFromGitHub(uploadedName);
     if (remote) {
       setCsvData(remote);
       setFileLoaded(true);
       alert(`📂 Loaded saved version of ${uploadedName}`);
     } else {
-      // Load uploaded file if no memory found
       const reader = new FileReader();
       reader.onload = (event) => {
         setCsvData(event.target.result);
@@ -37,42 +50,36 @@ function App() {
     }
   }
 
-  async function handleSave() {
-    if (!filePath || !csvData) return alert('⛔ Upload a file first');
-    await saveCsvToGitHub(filePath, csvData);
-    alert('✅ Saved to memory!');
+  function handleCsvChange(newCsv) {
+    setCsvData(newCsv);
+    saveCsvToGitHub(filePath, newCsv);
   }
 
-  async function handleReset() {
-    if (!filePath) return alert('⛔ Upload a file first');
-    const success = await deleteCsvFromGitHub(filePath);
-    if (success) {
-      setCsvData('');
-      setFileLoaded(false);
-      alert('🗑️ File reset');
-    } else {
-      alert('⚠️ File not found or could not be deleted');
-    }
+  function handleDelete() {
+    deleteCsvFromGitHub(filePath);
+    setCsvData('');
+    setFileLoaded(false);
   }
 
   return (
-    <div style={{ padding: '1rem' }}>
-      <h1>📦 Stocktake Tool</h1>
-
-      <input type="file" accept=".csv" onChange={handleUpload} />
-      <div style={{ marginTop: '1rem' }}>
-        <button onClick={handleSave}>✅ Done with this section</button>
-        <button onClick={handleReset} style={{ marginLeft: '1rem' }}>
-          🗑️ Reset Stocktake
-        </button>
-      </div>
-
-      {fileLoaded && (
-        <>
-          <Scanner csvData={csvData} setCsvData={setCsvData} />
-          <Report csvData={csvData} />
-        </>
-      )}
+    <div className="container">
+      <header>
+        <h1>Stocktake Memory Tool</h1>
+      </header>
+      <main>
+        <input type="file" accept=".csv" onChange={handleUpload} />
+        {fileLoaded ? (
+          <>
+            <Scanner csvData={csvData} onCsvChange={handleCsvChange} />
+            <Report csvData={csvData} onDelete={handleDelete} />
+          </>
+        ) : (
+          <p>📤 Upload a CSV file to get started</p>
+        )}
+      </main>
+      <footer>
+        <p>&copy; {new Date().getFullYear()} Your Store Tools</p>
+      </footer>
     </div>
   );
 }
