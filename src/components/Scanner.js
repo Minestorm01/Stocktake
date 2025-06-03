@@ -1,59 +1,41 @@
 import React, { useState } from 'react';
-import Papa from 'papaparse';
 
-function Scanner({ csvData, onCsvChange }) {
+function Scanner({ scannedItems, setScannedItems, onFinish }) {
   const [input, setInput] = useState('');
-  const [lastMatch, setLastMatch] = useState(null);
 
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    setInput(value);
-    if (value.length > 1) {
-      const rows = Papa.parse(csvData.trim(), { header: true }).data;
-      const match = rows.find(row => row?.Code?.trim() === value.trim());
-      if (match) {
-        setLastMatch(match);
-      } else {
-        setLastMatch(null);
-      }
-    } else {
-      setLastMatch(null);
+  function handleScan() {
+    const trimmed = input.trim();
+    if (trimmed && !scannedItems.includes(trimmed)) {
+      setScannedItems([...scannedItems, trimmed]);
     }
-  };
-
-  const handleUpdate = () => {
-    const rows = Papa.parse(csvData.trim(), { header: true });
-    const updatedRows = rows.data.map(row => {
-      if (row?.Code?.trim() === input.trim()) {
-        return {
-          ...row,
-          Counted: row.Counted === 'Yes' ? 'No' : 'Yes'
-        };
-      }
-      return row;
-    });
-    const newCsv = Papa.unparse(updatedRows);
-    onCsvChange(newCsv);
     setInput('');
-    setLastMatch(null);
-  };
+  }
+
+  function handleRemove(sku) {
+    setScannedItems(scannedItems.filter(item => item !== sku));
+  }
 
   return (
     <div className="scanner">
+      <h2>📷 Scanner</h2>
       <input
         type="text"
-        placeholder="Enter or scan a code"
+        placeholder="Scan or enter SKU"
         value={input}
-        onChange={handleInputChange}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && handleScan()}
       />
-      <button onClick={handleUpdate}>Update</button>
-      {lastMatch && (
-        <div className="result">
-          <p><strong>Description:</strong> {lastMatch.Description}</p>
-          <p><strong>Location:</strong> {lastMatch.Location}</p>
-          <p><strong>Status:</strong> {lastMatch.Counted}</p>
-        </div>
-      )}
+      <button onClick={handleScan}>Scan</button>
+
+      <ul className="scanned-list">
+        {scannedItems.map((item, idx) => (
+          <li key={idx}>
+            {item} <button onClick={() => handleRemove(item)}>❌</button>
+          </li>
+        ))}
+      </ul>
+
+      <button onClick={onFinish} style={{ marginTop: '20px' }}>✅ Finish Scanning</button>
     </div>
   );
 }
