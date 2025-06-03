@@ -4,26 +4,30 @@ import Papa from 'papaparse';
 const GITHUB_TOKEN = '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';
 const REPO_OWNER = 'harryfuller';
 const REPO_NAME = 'stocktake-data';
-const FILE_PATH = 'stocktake.csv';
 
 function App() {
   const [csvData, setCsvData] = useState('');
+  const [storeId, setStoreId] = useState('');
+  const [filePath, setFilePath] = useState('');
 
   useEffect(() => {
-    loadFromGitHub();
-  }, []);
+    if (storeId.trim()) {
+      setFilePath(`${storeId.trim().toLowerCase().replace(/\s+/g, '-')}.csv`);
+      loadFromGitHub(`${storeId.trim().toLowerCase().replace(/\s+/g, '-')}.csv`);
+    }
+  }, [storeId]);
 
-  async function getFileSHA() {
-    const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+  async function getFileSHA(path) {
+    const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`, {
       headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
     });
     const data = await res.json();
     return data.sha;
   }
 
-  async function loadFromGitHub() {
+  async function loadFromGitHub(path) {
     try {
-      const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+      const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`, {
         headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
       });
       const data = await res.json();
@@ -32,15 +36,18 @@ function App() {
       console.log("✅ Loaded from GitHub");
     } catch (err) {
       console.warn("No saved file found, starting fresh.");
+      setCsvData('');
     }
   }
 
   async function saveToGitHub() {
+    if (!filePath) return alert('❗ Select a store ID first');
+
     const encoded = btoa(unescape(encodeURIComponent(csvData)));
     let sha = null;
-    try { sha = await getFileSHA(); } catch (_) {}
+    try { sha = await getFileSHA(filePath); } catch (_) {}
 
-    const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+    const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`, {
       method: 'PUT',
       headers: {
         'Authorization': `token ${GITHUB_TOKEN}`,
@@ -58,9 +65,11 @@ function App() {
   }
 
   async function resetStocktake() {
+    if (!filePath) return alert('❗ Select a store ID first');
+
     try {
-      const sha = await getFileSHA();
-      const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+      const sha = await getFileSHA(filePath);
+      const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `token ${GITHUB_TOKEN}`,
@@ -86,6 +95,19 @@ function App() {
   return (
     <div>
       <h1>📦 Stocktake Tool</h1>
+
+      <label>
+        Store ID:&nbsp;
+        <input
+          type="text"
+          value={storeId}
+          onChange={(e) => setStoreId(e.target.value)}
+          placeholder="e.g. Woden, Albury"
+        />
+      </label>
+
+      <br /><br />
+
       <textarea
         value={csvData}
         onChange={(e) => setCsvData(e.target.value)}
@@ -93,6 +115,7 @@ function App() {
         cols={80}
         placeholder="Paste or load your CSV here"
       />
+
       <div style={{ marginTop: '1rem' }}>
         <button onClick={saveToGitHub}>✅ Done with this section</button>
         <button onClick={resetStocktake} style={{ marginLeft: '1rem' }}>🗑️ Reset Stocktake</button>
@@ -102,3 +125,4 @@ function App() {
 }
 
 export default App;
+
