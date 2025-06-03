@@ -11,10 +11,10 @@ import {
 function App() {
   const [csvData, setCsvData] = useState('');
   const [filePath, setFilePath] = useState('');
-  const [screen, setScreen] = useState('upload'); // upload | login | scan | summary
-  const [staffId, setStaffId] = useState('');
-  const [location, setLocation] = useState('');
-  const [scannedItems, setScannedItems] = useState([]);
+  const [fileLoaded, setFileLoaded] = useState(false);
+  const [screen, setScreen] = useState('login');
+  const [staffNumber, setStaffNumber] = useState('');
+  const [locationNumber, setLocationNumber] = useState('');
 
   useEffect(() => {
     const lastFile = localStorage.getItem('lastUsedFile');
@@ -23,56 +23,52 @@ function App() {
         if (data) {
           setCsvData(data);
           setFilePath(lastFile);
-          setScreen('login');
+          setFileLoaded(true);
+          console.log(`📂 Auto-loaded ${lastFile} from memory.`);
         }
       });
     }
   }, []);
 
-  function handleUpload(e) {
+  async function handleUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
+
     const uploadedName = file.name.replace(/\s+/g, '-').toLowerCase();
     setFilePath(uploadedName);
     localStorage.setItem('lastUsedFile', uploadedName);
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setCsvData(event.target.result);
-      setScreen('login');
-    };
-    reader.readAsText(file);
+    const remote = await loadCsvFromGitHub(uploadedName);
+    if (remote) {
+      setCsvData(remote);
+      setFileLoaded(true);
+      alert(`📂 Loaded saved version of ${uploadedName}`);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setCsvData(event.target.result);
+        setFileLoaded(true);
+      };
+      reader.readAsText(file);
+    }
   }
 
-  function startScanning() {
-    setScannedItems([]);
-    setScreen('scan');
-  }
-
-  function finishScanning() {
-    setScreen('summary');
-    const updatedCsv = appendScansToCsv(csvData, scannedItems);
-    setCsvData(updatedCsv);
-    saveCsvToGitHub(filePath, updatedCsv);
-  }
-
-  function appendScansToCsv(csv, scans) {
-    const rows = Papa.parse(csv.trim(), { header: true }).data;
-    scans.forEach(scan => {
-      const match = rows.find(row => row.Code === scan);
-      if (match) match.Counted = 'Yes';
-    });
-    return Papa.unparse(rows);
+  function handleCsvChange(newCsv) {
+    setCsvData(newCsv);
+    saveCsvToGitHub(filePath, newCsv);
   }
 
   function handleDelete() {
     deleteCsvFromGitHub(filePath);
     setCsvData('');
-    setFilePath('');
-    setStaffId('');
-    setLocation('');
-    setScannedItems([]);
-    setScreen('upload');
+    setFileLoaded(false);
+    setScreen('login');
+  }
+
+  function resetStocktake() {
+    setScreen('login');
+    setStaffNumber('');
+    setLocationNumber('');
   }
 
   return (
@@ -80,41 +76,43 @@ function App() {
       <header>
         <h1>Stocktake Memory Tool</h1>
       </header>
-
-      {screen === 'upload' && (
-        <main>
+      <main>
+        {!fileLoaded ? (
           <input type="file" accept=".csv" onChange={handleUpload} />
-        </main>
-      )}
-
-      {screen === 'login' && (
-        <main>
-          <label>Staff ID:
-            <input value={staffId} onChange={e => setStaffId(e.target.value)} />
-          </label>
-          <label>Location:
-            <input value={location} onChange={e => setLocation(e.target.value)} />
-          </label>
-          <button onClick={startScanning}>Start Scanning</button>
-        </main>
-      )}
-
-      {screen === 'scan' && (
-        <Scanner
-          scannedItems={scannedItems}
-          setScannedItems={setScannedItems}
-          onFinish={finishScanning}
-        />
-      )}
-
-      {screen === 'summary' && (
-        <main>
-          <p>Welcome back, {staffId}. Location: {location}</p>
-          <button onClick={() => setScreen('login')}>📦 Start New Scan</button>
-          <Report csvData={csvData} onDelete={handleDelete} />
-        </main>
-      )}
-
+        ) : screen === 'login' ? (
+          <div>
+            <input
+              type="number"
+              placeholder="Staff Number"
+              value={staffNumber}
+              onChange={(e) => setStaffNumber(e.target.value)}
+            />
+            <input
+              type="number"
+              placeholder="Location Number"
+              value={locationNumber}
+              onChange={(e) => setLocationNumber(e.target.value)}
+            />
+            <button
+              disabled={!staffNumber || !locationNumber}
+              onClick={() => setScreen('scan')}
+            >
+              Start Scanning
+            </button>
+          </div>
+        ) : screen === 'scan' ? (
+          <div>
+            <Scanner csvData={csvData} onCsvChange={handleCsvChange} />
+            <button onClick={() => setScreen('options')}>Finish Scanning</button>
+          </div>
+        ) : (
+          <div>
+            <Report csvData={csvData} onDelete={handleDelete} />
+            <button onClick={resetStocktake}>Reset Stocktake</button>
+            <button onClick={() => setScreen('login')}>Return to Login</button>
+          </div>
+        )}
+      </main>
       <footer>
         <p>&copy; {new Date().getFullYear()} Your Store Tools</p>
       </footer>
