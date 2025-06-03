@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+rmimport React, { useEffect, useState } from 'react';
 import Papa from 'papaparse';
 
 const GITHUB_TOKEN = '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';
-const REPO_OWNER = 'harryfuller';
-const REPO_NAME = 'stocktake-data';
+const REPO_OWNER = 'Minestorm01';
+const REPO_NAME = 'Stocktake';
 
 function App() {
   const [csvData, setCsvData] = useState('');
