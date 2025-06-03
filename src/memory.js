@@ -1,37 +1,43 @@
-// memory.js — Netlify-safe version
+// memory.js
 
-export async function loadCsvFromGitHub(filePath) {
-  const res = await fetch('/.netlify/functions/load', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ filePath })
-  });
+const API_BASE = "/.netlify/functions/save";
 
-  if (res.ok) {
-    const { content } = await res.json();
-    return content;
-  } else {
-    console.warn(`No file found for ${filePath}`);
+export async function loadCsvFromGitHub(filename) {
+  try {
+    const res = await fetch(`${API_BASE}?filename=${filename}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.text();
+    return data;
+  } catch (err) {
+    console.error("❌ Failed to load CSV from memory:", err);
     return null;
   }
 }
 
-export async function saveCsvToGitHub(filePath, csvData) {
-  const res = await fetch('/.netlify/functions/save', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ filePath, content: csvData })
-  });
-
-  return res.ok;
+export async function saveCsvToGitHub(filename, content) {
+  try {
+    const res = await fetch(API_BASE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename, content })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    console.log(`💾 Saved ${filename} to memory.`);
+  } catch (err) {
+    console.error("❌ Failed to save CSV to memory:", err);
+  }
 }
 
-export async function deleteCsvFromGitHub(filePath) {
-  const res = await fetch('/.netlify/functions/delete', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ filePath })
-  });
-
-  return res.ok;
+export async function deleteCsvFromGitHub(filename) {
+  try {
+    const res = await fetch(API_BASE, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    console.log(`🗑️ Deleted ${filename} from memory.`);
+  } catch (err) {
+    console.error("❌ Failed to delete CSV from memory:", err);
+  }
 }
