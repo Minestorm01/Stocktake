@@ -11,7 +11,10 @@ import {
 function App() {
   const [csvData, setCsvData] = useState('');
   const [filePath, setFilePath] = useState('');
-  const [fileLoaded, setFileLoaded] = useState(false);
+  const [screen, setScreen] = useState('upload'); // upload | login | scan | summary
+  const [staffId, setStaffId] = useState('');
+  const [location, setLocation] = useState('');
+  const [scannedItems, setScannedItems] = useState([]);
 
   useEffect(() => {
     const lastFile = localStorage.getItem('lastUsedFile');
@@ -20,45 +23,56 @@ function App() {
         if (data) {
           setCsvData(data);
           setFilePath(lastFile);
-          setFileLoaded(true);
-          console.log(`📂 Auto-loaded ${lastFile} from memory.`);
+          setScreen('login');
         }
       });
     }
   }, []);
 
-  async function handleUpload(e) {
+  function handleUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
-
     const uploadedName = file.name.replace(/\s+/g, '-').toLowerCase();
     setFilePath(uploadedName);
     localStorage.setItem('lastUsedFile', uploadedName);
 
-    const remote = await loadCsvFromGitHub(uploadedName);
-    if (remote) {
-      setCsvData(remote);
-      setFileLoaded(true);
-      alert(`📂 Loaded saved version of ${uploadedName}`);
-    } else {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setCsvData(event.target.result);
-        setFileLoaded(true);
-      };
-      reader.readAsText(file);
-    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setCsvData(event.target.result);
+      setScreen('login');
+    };
+    reader.readAsText(file);
   }
 
-  function handleCsvChange(newCsv) {
-    setCsvData(newCsv);
-    saveCsvToGitHub(filePath, newCsv);
+  function startScanning() {
+    setScannedItems([]);
+    setScreen('scan');
+  }
+
+  function finishScanning() {
+    setScreen('summary');
+    const updatedCsv = appendScansToCsv(csvData, scannedItems);
+    setCsvData(updatedCsv);
+    saveCsvToGitHub(filePath, updatedCsv);
+  }
+
+  function appendScansToCsv(csv, scans) {
+    const rows = Papa.parse(csv.trim(), { header: true }).data;
+    scans.forEach(scan => {
+      const match = rows.find(row => row.Code === scan);
+      if (match) match.Counted = 'Yes';
+    });
+    return Papa.unparse(rows);
   }
 
   function handleDelete() {
     deleteCsvFromGitHub(filePath);
     setCsvData('');
-    setFileLoaded(false);
+    setFilePath('');
+    setStaffId('');
+    setLocation('');
+    setScannedItems([]);
+    setScreen('upload');
   }
 
   return (
@@ -66,17 +80,41 @@ function App() {
       <header>
         <h1>Stocktake Memory Tool</h1>
       </header>
-      <main>
-        <input type="file" accept=".csv" onChange={handleUpload} />
-        {fileLoaded ? (
-          <>
-            <Scanner csvData={csvData} onCsvChange={handleCsvChange} />
-            <Report csvData={csvData} onDelete={handleDelete} />
-          </>
-        ) : (
-          <p>📤 Upload a CSV file to get started</p>
-        )}
-      </main>
+
+      {screen === 'upload' && (
+        <main>
+          <input type="file" accept=".csv" onChange={handleUpload} />
+        </main>
+      )}
+
+      {screen === 'login' && (
+        <main>
+          <label>Staff ID:
+            <input value={staffId} onChange={e => setStaffId(e.target.value)} />
+          </label>
+          <label>Location:
+            <input value={location} onChange={e => setLocation(e.target.value)} />
+          </label>
+          <button onClick={startScanning}>Start Scanning</button>
+        </main>
+      )}
+
+      {screen === 'scan' && (
+        <Scanner
+          scannedItems={scannedItems}
+          setScannedItems={setScannedItems}
+          onFinish={finishScanning}
+        />
+      )}
+
+      {screen === 'summary' && (
+        <main>
+          <p>Welcome back, {staffId}. Location: {location}</p>
+          <button onClick={() => setScreen('login')}>📦 Start New Scan</button>
+          <Report csvData={csvData} onDelete={handleDelete} />
+        </main>
+      )}
+
       <footer>
         <p>&copy; {new Date().getFullYear()} Your Store Tools</p>
       </footer>
