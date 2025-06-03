@@ -56,25 +56,10 @@ function App() {
   }
 
   return (
-    <div style={{ padding: '1rem' }}>
-      <h1>📦 Stocktake Tool</h1>
+  <div className="App">
+    <h1>Hello, world!</h1>
+  </div>
+);
 
-      <input type="file" accept=".csv" onChange={handleUpload} />
-      <div style={{ marginTop: '1rem' }}>
-        <button onClick={handleSave}>✅ Done with this section</button>
-        <button onClick={handleReset} style={{ marginLeft: '1rem' }}>
-          🗑️ Reset Stocktake
-        </button>
-      </div>
-
-      {fileLoaded && (
-        <>
-          <Scanner csvData={csvData} setCsvData={setCsvData} />
-          <Report csvData={csvData} />
-        </>
-      )}
-    </div>
-  );
-}
 
 export default App;
