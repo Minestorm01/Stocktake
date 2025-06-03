@@ -1,128 +1,96 @@
-rmimport React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Papa from 'papaparse';
-
-const GITHUB_TOKEN = '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';
-const REPO_OWNER = 'Minestorm01';
-const REPO_NAME = 'Stocktake';
+import Scanner from './components/Scanner';
+import Report from './components/Report';
+import {
+  loadCsvFromGitHub,
+  saveCsvToGitHub,
+  deleteCsvFromGitHub
+} from './memory';
 
 function App() {
   const [csvData, setCsvData] = useState('');
-  const [storeId, setStoreId] = useState('');
-  const [filePath, setFilePath] = useState('');
+  const [staffId, setStaffId] = useState('');
+  const [location, setLocation] = useState('');
+
+  const fileSelected = staffId.trim() && location.trim();
 
   useEffect(() => {
-    if (storeId.trim()) {
-      setFilePath(`${storeId.trim().toLowerCase().replace(/\s+/g, '-')}.csv`);
-      loadFromGitHub(`${storeId.trim().toLowerCase().replace(/\s+/g, '-')}.csv`);
-    }
-  }, [storeId]);
-
-  async function getFileSHA(path) {
-    const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`, {
-      headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-    });
-    const data = await res.json();
-    return data.sha;
-  }
-
-  async function loadFromGitHub(path) {
-    try {
-      const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`, {
-        headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+    if (fileSelected) {
+      loadCsvFromGitHub(staffId, location).then(data => {
+        if (data) {
+          setCsvData(data);
+        } else {
+          setCsvData('');
+        }
       });
-      const data = await res.json();
-      const csv = decodeURIComponent(escape(atob(data.content)));
-      setCsvData(csv);
-      console.log("✅ Loaded from GitHub");
-    } catch (err) {
-      console.warn("No saved file found, starting fresh.");
-      setCsvData('');
     }
+  }, [staffId, location]);
+
+  function handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target.result;
+      setCsvData(text);
+    };
+    reader.readAsText(file);
   }
 
-  async function saveToGitHub() {
-    if (!filePath) return alert('❗ Select a store ID first');
-
-    const encoded = btoa(unescape(encodeURIComponent(csvData)));
-    let sha = null;
-    try { sha = await getFileSHA(filePath); } catch (_) {}
-
-    const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: 'Update stocktake',
-        content: encoded,
-        ...(sha && { sha })
-      })
-    });
-
-    if (res.ok) alert('✅ Stocktake saved!');
-    else alert('❌ Save failed');
+  async function handleSave() {
+    if (!fileSelected || !csvData) return alert('Missing staff/location or CSV data');
+    await saveCsvToGitHub(staffId, location, csvData);
+    alert('✅ Stocktake saved to memory!');
   }
 
-  async function resetStocktake() {
-    if (!filePath) return alert('❗ Select a store ID first');
-
-    try {
-      const sha = await getFileSHA(filePath);
-      const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `token ${GITHUB_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: 'Reset stocktake',
-          sha: sha
-        })
-      });
-
-      if (res.ok) {
-        setCsvData('');
-        alert('🗑️ Stocktake reset');
-      } else {
-        alert('❌ Reset failed');
-      }
-    } catch (err) {
-      alert('⚠️ Nothing to reset');
-    }
+  async function handleReset() {
+    if (!fileSelected) return alert('Missing staff/location');
+    await deleteCsvFromGitHub(staffId, location);
+    setCsvData('');
+    alert('🗑️ Stocktake reset');
   }
 
   return (
     <div>
       <h1>📦 Stocktake Tool</h1>
 
-      <label>
-        Store ID:&nbsp;
-        <input
-          type="text"
-          value={storeId}
-          onChange={(e) => setStoreId(e.target.value)}
-          placeholder="e.g. Woden, Albury"
-        />
-      </label>
+      <div style={{ marginBottom: '1rem' }}>
+        <label>
+          Staff ID: &nbsp;
+          <input
+            type="text"
+            value={staffId}
+            onChange={(e) => setStaffId(e.target.value)}
+          />
+        </label>
+        &nbsp;&nbsp;
+        <label>
+          Location: &nbsp;
+          <input
+            type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+        </label>
+      </div>
 
-      <br /><br />
-
-      <textarea
-        value={csvData}
-        onChange={(e) => setCsvData(e.target.value)}
-        rows={20}
-        cols={80}
-        placeholder="Paste or load your CSV here"
-      />
+      <input type="file" accept=".csv" onChange={handleUpload} />
 
       <div style={{ marginTop: '1rem' }}>
-        <button onClick={saveToGitHub}>✅ Done with this section</button>
-        <button onClick={resetStocktake} style={{ marginLeft: '1rem' }}>🗑️ Reset Stocktake</button>
+        <button onClick={handleSave}>✅ Done with this section</button>
+        <button onClick={handleReset} style={{ marginLeft: '1rem' }}>🗑️ Reset Stocktake</button>
       </div>
+
+      {csvData && (
+        <>
+          <Scanner csvData={csvData} setCsvData={setCsvData} />
+          <Report csvData={csvData} />
+        </>
+      )}
     </div>
   );
 }
 
 export default App;
-
