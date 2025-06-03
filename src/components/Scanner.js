@@ -1,6 +1,6 @@
 // Scanner.js
 import React, { useState } from 'react';
-import memory from './memory';
+import { loadCsvFromGitHub } from '../memory';
 
 export default function Scanner() {
   const [staffId, setStaffId] = useState('');
