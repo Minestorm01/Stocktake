@@ -1,1 +1,16 @@
-npm init -y && npm install react react-dom papaparse
+{
+  "name": "stocktake",
+  "version": "1.0.0",
+  "description": "Public site with GitHub-backed memory",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "papaparse": "^5.4.1"
+  },
+  "devDependencies": {},
+  "license": "MIT"
+}
