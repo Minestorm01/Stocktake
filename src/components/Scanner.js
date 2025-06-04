@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+//import './Scanner.css';
 
 function Scanner({ onCompleteScan, csvData, onCsvChange }) {
   const [scannedSKUs, setScannedSKUs] = useState([]);
