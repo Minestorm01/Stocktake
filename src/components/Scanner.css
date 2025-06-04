@@ -1,0 +1,68 @@
+.scanner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background-color: #f5f5f7;
+  min-height: 100vh;
+}
+
+.scan-input {
+  width: 90%;
+  max-width: 400px;
+  padding: 12px 16px;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  outline: none;
+  background-color: #fff;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.scan-button {
+  width: 90%;
+  max-width: 400px;
+  padding: 12px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 12px;
+  background-color: #007aff;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.scan-button:hover {
+  background-color: #005ecb;
+}
+
+.scan-list {
+  width: 90%;
+  max-width: 600px;
+  list-style: none;
+  padding: 0;
+  margin-top: 2rem;
+}
+
+.scan-item {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: #ff3b30;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
