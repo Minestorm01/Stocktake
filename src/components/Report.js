@@ -1,12 +1,13 @@
 import React, { useMemo } from 'react';
 import Papa from 'papaparse';
+import { parseCsvRows } from '../utils';
 
 function buildReport(csvData) {
   const parsed = Papa.parse(csvData, { header: true });
   const rows = parsed.data.filter(r => r['ITEM']);
   const map = new Map();
-
- rows.forEach(row => {
+  
+  rows.forEach(row => {
     const sku = row['ITEM'];
     const location = row['LOCATION'] || 'Unknown';
     const flag = (row['SCANNED/TYPED'] || row['S/T'] || '').toUpperCase();
