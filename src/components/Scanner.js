@@ -45,7 +45,15 @@ function Scanner({ csvData, onCsvChange, location }) {
     ];
 
     if (exportRows.length > 0) {
-      const newCsv = Papa.unparse(exportRows);
+      let columns = baseRows.length > 0 ? Object.keys(baseRows[0]) : [];
+      scannedItems.forEach(item => {
+        Object.keys(item).forEach(key => {
+          if (key === 'id') return;
+          if (!columns.includes(key)) columns.push(key);
+        });
+      });
+      if (!columns.includes('SCANNED/TYPED')) columns.push('SCANNED/TYPED');
+      const newCsv = Papa.unparse(exportRows, { columns });
       onCsvChange(newCsv);
     }
   }, [scannedItems, baseRows, onCsvChange]);
