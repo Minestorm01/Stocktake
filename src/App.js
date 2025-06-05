@@ -13,6 +13,7 @@ function App() {
   const [filePath, setFilePath] = useState('');
   const [fileLoaded, setFileLoaded] = useState(false);
   const [screen, setScreen] = useState('login');
+  const [showOptions, setShowOptions] = useState(false);
   const [staffNumber, setStaffNumber] = useState('');
   const [locationNumber, setLocationNumber] = useState('');
 
@@ -57,18 +58,22 @@ function App() {
     setCsvData(newCsv);
     saveCsvToGitHub(filePath, newCsv);
   }
+  function downloadCsv() {
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filePath || 'stocktake.csv');
+    link.click();
+  }
 
+ 
   function handleDelete() {
     deleteCsvFromGitHub(filePath);
     setCsvData('');
     setFileLoaded(false);
     setScreen('login');
-  }
-
-  function resetStocktake() {
-    setScreen('login');
-    setStaffNumber('');
-    setLocationNumber('');
+    setShowOptions(false);
   }
 
   return (
@@ -99,6 +104,13 @@ function App() {
             >
               Start Scanning
             </button>
+      {showOptions && (
+              <div className="options">
+                <button onClick={() => setScreen('report')}>Generate Variance Report</button>
+                <button onClick={downloadCsv}>Download CSV</button>
+                <button onClick={handleDelete}>Reset Stocktake</button>
+              </div>
+            )}
           </div>
         ) : screen === 'scan' ? (
           <div>
@@ -107,16 +119,11 @@ function App() {
               onCsvChange={handleCsvChange}
               location={locationNumber}
             />
-            <button onClick={() => setScreen('options')}>Finish Scanning</button>
-          </div>
-        ) : screen === 'options' ? (
-          <div>
-            <button onClick={() => setScreen('report')}>Generate Variance Report</button>
-            <button onClick={resetStocktake}>Reset Stocktake</button>
-            <button onClick={() => setScreen('login')}>Return to Login</button>
+                        <button onClick={() => { setScreen('login'); setShowOptions(true); }}>Finish Scanning</button>
+
           </div>
         ) : (
-          <Report csvData={csvData} onDelete={handleDelete} />
+          <Report csvData={csvData} onDelete={handleDelete} onBack={() => setScreen('login')} />
         )}
       </main>
       <footer>
