@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
+import { parseCsvRows } from '../utils';
+
 
 function Scanner({ csvData, onCsvChange, location }) {
   const [scannedItems, setScannedItems] = useState([]);
@@ -9,8 +11,8 @@ function Scanner({ csvData, onCsvChange, location }) {
 // Load the base CSV rows only when no scans exist
   useEffect(() => {
  if (scannedItems.length === 0) {
-      const parsed = Papa.parse(csvData, { header: true });
-      const rows = parsed.data.filter(row => row['ITEM']);
+     if (scannedItems.length === 0 && csvData) {
+      const rows = parseCsvRows(csvData);
       setBaseRows(rows);
     }
   }, [csvData]);
@@ -37,8 +39,8 @@ function Scanner({ csvData, onCsvChange, location }) {
 
   useEffect(() => {
     if (baseRows.length === 0 && csvData) {
-      const parsed = Papa.parse(csvData, { header: true });
-      setBaseRows(parsed.data.filter(row => row['ITEM']));
+      if (baseRows.length === 0 && csvData) {
+      setBaseRows(parseCsvRows(csvData));
     }
 
  const exportRows = [
