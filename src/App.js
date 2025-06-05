@@ -116,7 +116,7 @@ function App() {
             <button onClick={() => setScreen('login')}>Return to Login</button>
           </div>
         ) : (
-          <VarianceReport csvData={csvData} onDelete={handleDelete} />
+          <Report csvData={csvData} onDelete={handleDelete} />
         )}
       </main>
       <footer>
