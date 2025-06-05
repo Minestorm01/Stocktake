@@ -61,6 +61,21 @@ function buildReport(csvData) {
 function Report({ csvData, onDelete, onBack }) {
   const reportData = useMemo(() => buildReport(csvData), [csvData]);
 
+   const columns = [
+    'ITEM',
+    'DESCRIPTION',
+    'OLD SKU NO.',
+    'STATUS',
+    'BOOK UNITS',
+    'ACTUAL UNITS',
+    'VARIANCE UNITS',
+    'RETAIL PRICE',
+    'PREVIOUS COUNT',
+    'LOCATION',
+    'COUNTED TWICE',
+    'TRANSFER FLAG'
+  ];
+
      const download = () => {
     const csv = Papa.unparse(reportData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -77,24 +92,31 @@ function Report({ csvData, onDelete, onBack }) {
       {reportData.length === 0 ? (
         <p>No data available.</p>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              {Object.keys(reportData[0]).map(key => (
-                <th key={key}>{key}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {reportData.map((row, idx) => (
-              <tr key={idx}>
-                {Object.values(row).map((val, i) => (
-                  <td key={i}>{val}</td>
+        <div className="report-table-wrapper">
+          <table className="report-table">
+            <thead>
+              <tr>
+                {columns.map(col => (
+                  <th key={col}>{col}</th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+           </thead>
+            <tbody>
+              {reportData.map((row, idx) => (
+                <tr key={idx}>
+                  {columns.map(col => (
+                    <td
+                      key={col}
+                      className={col === 'DESCRIPTION' ? 'description-cell' : ''}
+                    >
+                      {row[col] || ''}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       <button onClick={download}>Download CSV</button>
       <button onClick={onBack}>Return to Login</button>
