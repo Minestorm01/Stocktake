@@ -1,0 +1,84 @@
+/* === VarianceReport.css === */
+
+/* Table Styling */
+.variance-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 24px;
+  font-size: 15px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  background-color: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.variance-table th,
+.variance-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+.variance-table th {
+  background-color: #f5f5f5;
+  color: #444;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.variance-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.variance-table tr:hover {
+  background-color: #f0f8ff;
+}
+
+/* Header and Section Styling */
+.variance-header {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #2c3e50;
+  border-left: 6px solid #2980b9;
+  padding-left: 12px;
+}
+
+/* Button Styling */
+.variance-button {
+  background-color: #3498db;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.variance-button:hover {
+  background-color: #2980b9;
+}
+
+/* Tag Styling for Flags or Notes */
+.variance-flag {
+  background-color: #e74c3c;
+  color: white;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.variance-note {
+  background-color: #f1c40f;
+  color: #333;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 12px;
+  display: inline-block;
+}
