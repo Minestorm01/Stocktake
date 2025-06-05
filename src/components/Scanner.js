@@ -17,11 +17,15 @@ function Scanner({ csvData, onCsvChange, location }) {
 
   const handleScan = () => {
     if (!inputValue.trim()) return;
+     const sku = inputValue.trim();
+    const base = baseRows.find(row => row['ITEM'] === sku) || {};
     const newItem = {
       id: Date.now() + Math.random(), // Unique ID to allow individual deletion
-      ITEM: inputValue.trim(),
-      LOCATION: location || 'Unknown',
+       ...base,
+      ITEM: sku,
+      LOCATION: location || base['LOCATION'] || 'Unknown',
       'SCANNED/TYPED': 'S',
+      'BOOK UNITS': 0,
     };
     setScannedItems(prev => [...prev, newItem]);
     setInputValue('');
@@ -37,10 +41,12 @@ function Scanner({ csvData, onCsvChange, location }) {
       setBaseRows(parsed.data.filter(row => row['ITEM']));
     }
 
-
-    const updatedData = [...baseRows, ...scannedItems];
-    if (updatedData.length > 0) {
-      const newCsv = Papa.unparse(updatedData);
+ const exportRows = [
+      ...baseRows,
+      ...scannedItems.map(({ id, ...rest }) => rest),
+    ];
+    if (exportRows.length > 0) {
+      const newCsv = Papa.unparse(exportRows);
       onCsvChange(newCsv);
     }
   }, [scannedItems, baseRows]);
