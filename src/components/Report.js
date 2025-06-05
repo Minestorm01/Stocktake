@@ -22,6 +22,7 @@ function buildReport(csvData) {
         "BOOK UNITS": 0,
         "ACTUAL UNITS": 0,
         locations: new Set(),
+        locationCounts: {},
        "RETAIL PRICE": row["RETAIL PRICE"] || "",
         "PREVIOUS COUNT": row["PREVIOUS COUNT"] || "",
         countedTwice: false,
@@ -54,7 +55,9 @@ if (location !== "Unknown") {
       "VARIANCE UNITS": variance,
       "RETAIL PRICE": item["RETAIL PRICE"],
       "PREVIOUS COUNT": item["PREVIOUS COUNT"],
-      LOCATION: Array.from(item.locations).join(","),
+        LOCATION: Object.entries(item.locationCounts)
+        .map(([loc, count]) => (count > 1 ? `${loc} x${count}` : loc))
+        .join(", "),
       "COUNTED TWICE": item.countedTwice ? "✓" : "",
       "TRANSFER FLAG":
         variance === 0 ? "" : Math.abs(variance) <= 2 ? "⚠" : "",
