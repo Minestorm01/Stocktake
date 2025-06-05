@@ -3,12 +3,16 @@ import Papa from 'papaparse';
 
 function Scanner({ csvData, onCsvChange, location }) {
   const [scannedItems, setScannedItems] = useState([]);
+  const [baseRows, setBaseRows] = useState([]);
   const [inputValue, setInputValue] = useState('');
-
+ 
+// Load the base CSV rows only when no scans exist
   useEffect(() => {
-    const parsed = Papa.parse(csvData, { header: true });
-    const rows = parsed.data.filter(row => row['ITEM']);
-    setScannedItems([]); // Reset scanned items on load
+ if (scannedItems.length === 0) {
+      const parsed = Papa.parse(csvData, { header: true });
+      const rows = parsed.data.filter(row => row['ITEM']);
+      setBaseRows(rows);
+    }
   }, [csvData]);
 
   const handleScan = () => {
@@ -28,14 +32,18 @@ function Scanner({ csvData, onCsvChange, location }) {
   };
 
   useEffect(() => {
-    const parsed = Papa.parse(csvData, { header: true });
-    const baseData = parsed.data.filter(row => row['ITEM']);
+    if (baseRows.length === 0 && csvData) {
+      const parsed = Papa.parse(csvData, { header: true });
+      setBaseRows(parsed.data.filter(row => row['ITEM']));
+    }
 
-    // Merge scanned data back into CSV for saving
-    const updatedData = [...baseData, ...scannedItems];
-    const newCsv = Papa.unparse(updatedData);
-    onCsvChange(newCsv);
-  }, [scannedItems]);
+
+    const updatedData = [...baseRows, ...scannedItems];
+    if (updatedData.length > 0) {
+      const newCsv = Papa.unparse(updatedData);
+      onCsvChange(newCsv);
+    }
+  }, [scannedItems, baseRows]);
 
   return (
     <div className="scanner">
