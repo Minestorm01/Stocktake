@@ -102,13 +102,15 @@ footer {
 }
 
 .report-table-wrapper {
-  overflow-x: auto;
+overflow: auto;
+max-height: 60vh;
 }
 
 .report-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 15px;
+  table-layout: fixed;
 }
 
 .report-table th,
@@ -116,11 +118,21 @@ footer {
   padding: 10px;
   text-align: left;
   border-bottom: 1px solid #eee;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .report-table th {
+  position: sticky;
+  top: 0;
   background-color: #f2f2f2;
   font-weight: 600;
+  z-index: 1;
+}
+
+.description-cell {
+  max-width: 220px;
 }
 
 .delete-button {
