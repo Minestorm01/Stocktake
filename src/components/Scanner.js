@@ -62,4 +62,3 @@ function Scanner({ csvData, onCsvChange, location }) {
 }
 
 export default Scanner;
-""")
