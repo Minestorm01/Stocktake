@@ -28,8 +28,12 @@ function buildReport(csvData) {
       });
     }
     const item = map.get(sku);
-    item.locations.add(location);
-   if (flag === "S" || flag === "T") {
+if (location !== "Unknown") {
+      item.locations.add(location);
+      item.locations.delete("Unknown");
+    } else if (item.locations.size === 0) {
+      item.locations.add("Unknown");
+    }   if (flag === "S" || flag === "T") {
       item["ACTUAL UNITS"] += 1;
       if (item["ACTUAL UNITS"] > 1) item.countedTwice = true;
     } else if (!isNaN(bookUnits)) {
