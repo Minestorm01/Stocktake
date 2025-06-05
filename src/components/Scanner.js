@@ -1,59 +1,66 @@
-import React, { useState } from 'react';
-//import './Scanner.css';
+import ace_tools as tools; tools.create_text_file('Scanner.js', """
+import React, { useState, useEffect } from 'react';
+import Papa from 'papaparse';
 
-function Scanner({ onCompleteScan, csvData, onCsvChange }) {
-  const [scannedSKUs, setScannedSKUs] = useState([]);
-  const [currentSKU, setCurrentSKU] = useState('');
+function Scanner({ csvData, onCsvChange, location }) {
+  const [scannedItems, setScannedItems] = useState([]);
+  const [inputValue, setInputValue] = useState('');
 
-  const handleScan = (e) => {
-    e.preventDefault();
-    if (!currentSKU.trim()) return;
-    setScannedSKUs((prev) => [...prev, currentSKU.trim()]);
-    setCurrentSKU('');
+  useEffect(() => {
+    const parsed = Papa.parse(csvData, { header: true });
+    const rows = parsed.data.filter(row => row['ITEM']);
+    setScannedItems([]); // Reset scanned items on load
+  }, [csvData]);
+
+  const handleScan = () => {
+    if (!inputValue.trim()) return;
+    const newItem = {
+      id: Date.now() + Math.random(), // Unique ID to allow individual deletion
+      ITEM: inputValue.trim(),
+      LOCATION: location || 'Unknown',
+      'SCANNED/TYPED': 'S',
+    };
+    setScannedItems(prev => [...prev, newItem]);
+    setInputValue('');
   };
 
-  const removeSKU = (sku) => {
-    setScannedSKUs((prev) => prev.filter((item) => item !== sku));
+  const handleDelete = (idToRemove) => {
+    setScannedItems(prev => prev.filter(item => item.id !== idToRemove));
   };
 
-  const finishScanning = () => {
-    // Integrate scanned SKUs into CSV logic if needed here
-    onCompleteScan();
-  };
+  useEffect(() => {
+    const parsed = Papa.parse(csvData, { header: true });
+    const baseData = parsed.data.filter(row => row['ITEM']);
+
+    // Merge scanned data back into CSV for saving
+    const updatedData = [...baseData, ...scannedItems];
+    const newCsv = Papa.unparse(updatedData);
+    onCsvChange(newCsv);
+  }, [scannedItems]);
 
   return (
     <div className="scanner">
-      <h2>Scan Products</h2>
-      <form onSubmit={handleScan}>
-        <input
-          type="text"
-          placeholder="Scan or enter SKU"
-          value={currentSKU}
-          onChange={(e) => setCurrentSKU(e.target.value)}
-          autoFocus
-        />
-        <button type="submit">Add</button>
-      </form>
+      <h2>📦 Scan Items</h2>
+      <input
+        type="text"
+        placeholder="Scan SKU or enter manually"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && handleScan()}
+      />
+      <button onClick={handleScan}>➕ Add</button>
 
-      <div className="scanned-list">
-        <h3>Scanned SKUs:</h3>
-        {scannedSKUs.length === 0 ? (
-          <p>No SKUs scanned yet.</p>
-        ) : (
-          <ul>
-            {scannedSKUs.map((sku, idx) => (
-              <li key={idx}>
-                {sku}
-                <button onClick={() => removeSKU(sku)} className="remove-btn">❌</button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <button className="finish-btn" onClick={finishScanning}>✅ Finish Scanning</button>
+      <ul className="scanned-list">
+        {scannedItems.map((item, index) => (
+          <li key={item.id}>
+            {item.ITEM} — {item.LOCATION}
+            <button onClick={() => handleDelete(item.id)}>❌</button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
 export default Scanner;
+""")
