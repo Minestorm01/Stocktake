@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import Scanner from './components/Scanner';
-import VarianceReport from './components/VarianceReport';
+import Report from './components/Report';
 import {
   loadCsvFromGitHub,
   saveCsvToGitHub,
