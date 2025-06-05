@@ -2,33 +2,33 @@ import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import { parseCsvRows } from '../utils';
 
-
 function Scanner({ csvData, onCsvChange, location }) {
   const [scannedItems, setScannedItems] = useState([]);
   const [baseRows, setBaseRows] = useState([]);
   const [inputValue, setInputValue] = useState('');
- 
-// Load the base CSV rows only when no scans exist
+
+  // Load base CSV rows when component mounts or csvData changes
   useEffect(() => {
- if (scannedItems.length === 0) {
-     if (scannedItems.length === 0 && csvData) {
+    if (csvData && baseRows.length === 0) {
       const rows = parseCsvRows(csvData);
       setBaseRows(rows);
     }
-  }, [csvData]);
+  }, [csvData, baseRows.length]);
 
   const handleScan = () => {
-    if (!inputValue.trim()) return;
-     const sku = inputValue.trim();
+    const sku = inputValue.trim();
+    if (!sku) return;
+
     const base = baseRows.find(row => row['ITEM'] === sku) || {};
     const newItem = {
-      id: Date.now() + Math.random(), // Unique ID to allow individual deletion
-       ...base,
+      id: Date.now() + Math.random(), // Unique ID
+      ...base,
       ITEM: sku,
       LOCATION: location || base['LOCATION'] || 'Unknown',
       'SCANNED/TYPED': 'S',
       'BOOK UNITS': 0,
     };
+
     setScannedItems(prev => [...prev, newItem]);
     setInputValue('');
   };
@@ -37,21 +37,18 @@ function Scanner({ csvData, onCsvChange, location }) {
     setScannedItems(prev => prev.filter(item => item.id !== idToRemove));
   };
 
+  // Generate updated CSV when scannedItems or baseRows change
   useEffect(() => {
-    if (baseRows.length === 0 && csvData) {
-      if (baseRows.length === 0 && csvData) {
-      setBaseRows(parseCsvRows(csvData));
-    }
-
- const exportRows = [
+    const exportRows = [
       ...baseRows,
       ...scannedItems.map(({ id, ...rest }) => rest),
     ];
+
     if (exportRows.length > 0) {
       const newCsv = Papa.unparse(exportRows);
       onCsvChange(newCsv);
     }
-  }, [scannedItems, baseRows]);
+  }, [scannedItems, baseRows, onCsvChange]);
 
   return (
     <div className="scanner">
@@ -66,7 +63,7 @@ function Scanner({ csvData, onCsvChange, location }) {
       <button onClick={handleScan}>➕ Add</button>
 
       <ul className="scanned-list">
-        {scannedItems.map((item, index) => (
+        {scannedItems.map(item => (
           <li key={item.id}>
             {item.ITEM} — {item.LOCATION}
             <button onClick={() => handleDelete(item.id)}>❌</button>
