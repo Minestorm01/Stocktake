@@ -1,4 +1,3 @@
-import ace_tools as tools; tools.create_text_file('Scanner.js', """
 import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 
