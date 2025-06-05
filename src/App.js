@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import Scanner from './components/Scanner';
 import Report from './components/Report';
+import VarianceReport from './components/VarianceReport';
 import {
   loadCsvFromGitHub,
   saveCsvToGitHub,
@@ -15,6 +16,8 @@ function App() {
   const [screen, setScreen] = useState('login');
   const [staffNumber, setStaffNumber] = useState('');
   const [locationNumber, setLocationNumber] = useState('');
+  const [showVariance, setShowVariance] = useState(false);
+  const [scannedItems, setScannedItems] = useState([]);
 
   useEffect(() => {
     const lastFile = localStorage.getItem('lastUsedFile');
@@ -53,8 +56,9 @@ function App() {
     }
   }
 
-  function handleCsvChange(newCsv) {
+  function handleCsvChange(newCsv, updatedScannedItems = []) {
     setCsvData(newCsv);
+    setScannedItems(updatedScannedItems);
     saveCsvToGitHub(filePath, newCsv);
   }
 
@@ -69,6 +73,8 @@ function App() {
     setScreen('login');
     setStaffNumber('');
     setLocationNumber('');
+    setScannedItems([]);
+    setShowVariance(false);
   }
 
   return (
@@ -102,14 +108,26 @@ function App() {
           </div>
         ) : screen === 'scan' ? (
           <div>
-            <Scanner csvData={csvData} onCsvChange={handleCsvChange} />
+            <Scanner
+              csvData={csvData}
+              onCsvChange={handleCsvChange}
+              location={locationNumber}
+              onDone={() => setScreen('options')}
+            />
             <button onClick={() => setScreen('options')}>Finish Scanning</button>
           </div>
-        ) : (
+        ) : screen === 'options' ? (
           <div>
             <Report csvData={csvData} onDelete={handleDelete} />
+            <button onClick={() => setShowVariance(true)}>Generate Variance Report</button>
             <button onClick={resetStocktake}>Reset Stocktake</button>
             <button onClick={() => setScreen('login')}>Return to Login</button>
+          </div>
+        ) : null}
+
+        {showVariance && (
+          <div className="variance-window">
+            <VarianceReport scannedData={scannedItems} />
           </div>
         )}
       </main>
