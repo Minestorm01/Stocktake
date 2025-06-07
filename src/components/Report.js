@@ -29,13 +29,17 @@ function buildReport(csvData) {
       });
     }
     const item = map.get(sku);
-if (location !== "Unknown") {
-      item.locations.add(location);
+
+    if (location !== "Unknown") {
+    item.locations.add(location);
       item.locations.delete("Unknown");
     } else if (item.locations.size === 0) {
       item.locations.add("Unknown");
-    }   if (flag === "S" || flag === "T") {
+   }
+
+    if (flag === "S" || flag === "T") {
       item["ACTUAL UNITS"] += 1;
+      item.locationCounts[location] = (item.locationCounts[location] || 0) + 1;
       if (item["ACTUAL UNITS"] > 1) item.countedTwice = true;
     } else if (!isNaN(bookUnits)) {
       item["BOOK UNITS"] += bookUnits;
