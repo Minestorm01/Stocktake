@@ -9,7 +9,8 @@ body {
 }
 
 .container {
-  max-width: 700px;
+  /* Allow the container to grow based on its content */
+  width: max-content;
   margin: 40px auto;
   padding: 20px;
   background-color: #fff;
@@ -35,49 +36,7 @@ input[type="file"] {
   font-size: 16px;
   margin: 10px 0;
   border-radius: 10px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-
-button {
-  background-color: #007aff;
-  color: white;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  margin-top: 10px;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-}
-
-button:hover {
-  background-color: #005ecb;
-}
-
-ul.scanned-list {
-  list-style: none;
-  padding: 0;
-  margin-top: 10px;
-}
-
-ul.scanned-list li {
-  background-color: #f2f2f7;
-  border-radius: 10px;
-  padding: 10px;
-  margin-bottom: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-footer {
-  margin-top: 40px;
-  text-align: center;
-  font-size: 14px;
-  color: #888;
-}
-
+@@ -81,65 +82,67 @@ footer {
 .report {
   margin-top: 30px;
   background-color: #fafafa;
@@ -103,8 +62,9 @@ footer {
 }
 
 .report-table-wrapper {
-overflow: auto;
-max-height: 60vh;
+  /* Let the table determine its own height and width */
+  overflow: visible;
+  max-height: none;
 }
 
 .report-table {
@@ -132,7 +92,8 @@ max-height: 60vh;
 }
 
 .description-cell {
-  max-width: 220px;
+  /* Allow long descriptions to dictate their own width */
+  max-width: none;
 }
 
 .delete-button {
