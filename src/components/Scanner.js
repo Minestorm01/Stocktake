@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import { parseCsvRows } from '../utils';
 
-function Scanner({ csvData, onCsvChange, location }) {
+function Scanner({ csvData, onCsvChange, location, onItemScanned }) {
   const [scannedItems, setScannedItems] = useState([]);
   const [baseRows, setBaseRows] = useState([]);
   const [inputValue, setInputValue] = useState('');
@@ -30,6 +30,7 @@ function Scanner({ csvData, onCsvChange, location }) {
     };
 
     setScannedItems(prev => [...prev, newItem]);
+    if (onItemScanned) onItemScanned();
     setInputValue('');
   };
 
