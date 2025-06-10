@@ -1,13 +1,19 @@
 // memory.js
 
-const API_BASE = "/.netlify/functions/save";
+const SAVE_API = "/.netlify/functions/save";
+const LOAD_API = "/.netlify/functions/load";
+const DELETE_API = "/.netlify/functions/delete";
 
 export async function loadCsvFromGitHub(filename) {
   try {
-    const res = await fetch(`${API_BASE}?filename=${filename}`);
+    const res = await fetch(LOAD_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filePath: filename })
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.text();
-    return data;
+    const { content } = await res.json();
+    return content;
   } catch (err) {
     console.error("❌ Failed to load CSV from memory:", err);
     return null;
@@ -16,10 +22,10 @@ export async function loadCsvFromGitHub(filename) {
 
 export async function saveCsvToGitHub(filename, content) {
   try {
-    const res = await fetch(API_BASE, {
+    const res = await fetch(SAVE_API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename, content })
+      body: JSON.stringify({ filePath: filename, content })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     console.log(`💾 Saved ${filename} to memory.`);
@@ -30,10 +36,10 @@ export async function saveCsvToGitHub(filename, content) {
 
 export async function deleteCsvFromGitHub(filename) {
   try {
-    const res = await fetch(API_BASE, {
-      method: "DELETE",
+    const res = await fetch(DELETE_API, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename })
+      body: JSON.stringify({ filePath: filename })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     console.log(`🗑️ Deleted ${filename} from memory.`);
