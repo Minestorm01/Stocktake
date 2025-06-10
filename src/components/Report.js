@@ -24,7 +24,7 @@ function buildReport(csvData) {
         locations: new Set(),
         locationCounts: {},
        "RETAIL PRICE": row["RETAIL PRICE"] || "",
-        "PREVIOUS COUNT": row["PREVIOUS COUNT"] || "",
+         "PREVIOUS COUNT": row["PREVIOUS COUNT"] || "",
         countedTwice: false,
       });
     }
@@ -49,23 +49,24 @@ function buildReport(csvData) {
   const data = [];
   map.forEach((item) => {
     const variance = item["ACTUAL UNITS"] - item["BOOK UNITS"];
-    data.push({
-      ITEM: item.ITEM,
-      DESCRIPTION: item.DESCRIPTION,
-      "OLD SKU NO.": item["OLD SKU NO."],
-      STATUS: item.STATUS,
-     "BOOK UNITS": item["BOOK UNITS"],
-      "ACTUAL UNITS": item["ACTUAL UNITS"],
-      "VARIANCE UNITS": variance,
-      "RETAIL PRICE": item["RETAIL PRICE"],
-      "PREVIOUS COUNT": item["PREVIOUS COUNT"],
-        LOCATION: Object.entries(item.locationCounts)
-        .map(([loc, count]) => (count > 1 ? `${loc} x${count}` : loc))
-        .join(", "),
-      "COUNTED TWICE": item.countedTwice ? "✓" : "",
-      "TRANSFER FLAG":
-        variance === 0 ? "" : Math.abs(variance) <= 2 ? "⚠" : "",
-    });
+    if (variance !== 0) {
+      data.push({
+        ITEM: item.ITEM,
+        DESCRIPTION: item.DESCRIPTION,
+        "OLD SKU NO.": item["OLD SKU NO."],
+        STATUS: item.STATUS,
+       "BOOK UNITS": item["BOOK UNITS"],
+        "ACTUAL UNITS": item["ACTUAL UNITS"],
+        "VARIANCE UNITS": variance,
+        "RETAIL PRICE": item["RETAIL PRICE"],
+        "PREVIOUS COUNT": item["PREVIOUS COUNT"],
+          LOCATION: Object.entries(item.locationCounts)
+          .map(([loc, count]) => (count > 1 ? `${loc} x${count}` : loc))
+          .join(", "),
+        "COUNTED TWICE": item.countedTwice ? "✓" : "",
+        "TRANSFER FLAG": Math.abs(variance) <= 2 ? "⚠" : "",
+      });
+    }
   });
   return data;
 }
@@ -102,7 +103,7 @@ function Report({ csvData, onDelete, onBack }) {
     <div className="report-section">
       <h2>📊 Variance Report</h2>
       {reportData.length === 0 ? (
-        <p>No data available.</p>
+        <p>No variances found.</p>
       ) : (
         <div className="report-table-wrapper">
           <table className="report-table">
