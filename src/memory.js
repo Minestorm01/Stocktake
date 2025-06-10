@@ -2,14 +2,14 @@ const API_BASE = "/.netlify/functions/save";
 
 export async function loadCsvFromGitHub(filename) {
   try {
-    const res = await fetch(\`\${API_BASE}?filename=\${filename}\`);
+    const res = await fetch(`${API_BASE}?filename=${filename}`);
     if (!res.ok) {
       const errorText = await res.text();
       console.error("\\u274C Failed to load CSV from memory:", res.status, errorText);
-      throw new Error(\`Failed to load \${filename}\`);
+      throw new Error(`Failed to load ${filename}`);
     }
     const data = await res.text();
-    console.log(`📥 Loaded \${filename} from GitHub`);
+    console.log(`📥 Loaded ${filename} from GitHub`);
     return data;
   } catch (err) {
     console.error("❌ Error loading CSV:", err);
@@ -31,7 +31,7 @@ export async function saveCsvToGitHub(filename, content) {
       alert("❌ Save failed: " + errorText);
       return;
     }
-    console.log(`💾 Saved \${filename} to memory.`);
+    console.log(`💾 Saved ${filename} to memory.`);
     alert("✅ File saved successfully as: " + filename);
   } catch (err) {
     console.error("❌ Failed to save CSV to memory:", err);
@@ -47,7 +47,7 @@ export async function deleteCsvFromGitHub(filename) {
       body: JSON.stringify({ filename })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    console.log(`🗑️ Deleted \${filename} from memory.`);
+    console.log(`🗑️ Deleted ${filename} from memory.`);
     alert("🗑️ File deleted: " + filename);
   } catch (err) {
     console.error("❌ Failed to delete CSV from memory:", err);
