@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import Scanner from './components/Scanner';
-import Report from './components/Report';
+import Report, { buildReport } from './components/Report';
 import {
   loadCsvFromGitHub,
   saveCsvToGitHub,
@@ -16,6 +16,8 @@ function App() {
   const [showOptions, setShowOptions] = useState(false);
   const [staffNumber, setStaffNumber] = useState('');
   const [locationNumber, setLocationNumber] = useState('');
+  const [loadName, setLoadName] = useState('');
+  const [hasScanned, setHasScanned] = useState(false);
 
   useEffect(() => {
     const lastFile = localStorage.getItem('lastUsedFile');
@@ -25,6 +27,7 @@ function App() {
           setCsvData(data);
           setFilePath(lastFile);
           setFileLoaded(true);
+          setHasScanned(false);
           console.log(`📂 Auto-loaded ${lastFile} from memory.`);
         }
       });
@@ -43,20 +46,36 @@ function App() {
     if (remote) {
       setCsvData(remote);
       setFileLoaded(true);
+      setHasScanned(false);
       alert(`📂 Loaded saved version of ${uploadedName}`);
     } else {
       const reader = new FileReader();
       reader.onload = (event) => {
         setCsvData(event.target.result);
         setFileLoaded(true);
+        setHasScanned(false);
       };
       reader.readAsText(file);
     }
   }
 
+  async function handleLoadExisting() {
+    if (!loadName) return;
+    const data = await loadCsvFromGitHub(loadName);
+    if (data) {
+      setCsvData(data);
+      setFilePath(loadName);
+      setFileLoaded(true);
+      setHasScanned(false);
+      localStorage.setItem('lastUsedFile', loadName);
+    } else {
+      alert('File not found');
+    }
+  }
+
   function handleCsvChange(newCsv) {
     setCsvData(newCsv);
-    saveCsvToGitHub(filePath, newCsv);
+    setHasScanned(true);
   }
   function downloadCsv() {
     const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
@@ -67,11 +86,38 @@ function App() {
     link.click();
   }
 
+  function saveVarianceReport() {
+    const dataRows = buildReport(csvData);
+    const variancesOnly = dataRows.filter(r => r['VARIANCE UNITS'] !== 0);
+    const columns = [
+      'ITEM',
+      'DESCRIPTION',
+      'OLD SKU NO.',
+      'STATUS',
+      'BOOK UNITS',
+      'ACTUAL UNITS',
+      'VARIANCE UNITS',
+      'RETAIL PRICE',
+      'PREVIOUS COUNT',
+      'LOCATION',
+      'COUNTED TWICE',
+      'TRANSFER FLAG'
+    ];
+    const content = Papa.unparse(variancesOnly, { columns });
+    const defaultName = `variance-${Date.now()}.csv`;
+    const name = prompt('Filename for save', defaultName);
+    if (name) {
+      const filename = name.endsWith('.csv') ? name : `${name}.csv`;
+      saveCsvToGitHub(filename, content);
+    }
+  }
+
  
   function handleDelete() {
     deleteCsvFromGitHub(filePath);
     setCsvData('');
     setFileLoaded(false);
+    setHasScanned(false);
     setScreen('login');
     setShowOptions(false);
   }
@@ -83,7 +129,18 @@ function App() {
       </header>
       <main>
         {!fileLoaded ? (
-          <input type="file" accept=".csv" onChange={handleUpload} />
+          <div>
+            <input type="file" accept=".csv" onChange={handleUpload} />
+            <div style={{ marginTop: '10px' }}>
+              <input
+                type="text"
+                placeholder="Filename to load"
+                value={loadName}
+                onChange={(e) => setLoadName(e.target.value)}
+              />
+              <button onClick={handleLoadExisting} disabled={!loadName}>Load</button>
+            </div>
+          </div>
         ) : screen === 'login' ? (
           <div>
             <input
@@ -108,6 +165,7 @@ function App() {
               <div className="options">
                 <button onClick={() => setScreen('report')}>Generate Variance Report</button>
                 <button onClick={downloadCsv}>Download CSV</button>
+                <button onClick={saveVarianceReport} disabled={!hasScanned}>Save Variances</button>
                 <button onClick={handleDelete}>Reset Stocktake</button>
               </div>
             )}
@@ -118,6 +176,7 @@ function App() {
               csvData={csvData}
               onCsvChange={handleCsvChange}
               location={locationNumber}
+              onItemScanned={() => setHasScanned(true)}
             />
                         <button onClick={() => { setScreen('login'); setShowOptions(true); }}>Finish Scanning</button>
 
@@ -132,6 +191,10 @@ function App() {
     </div>
   );
 }
+
+export default App;
+
+
 
 export default App;
 
