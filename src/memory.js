@@ -5,7 +5,7 @@ export async function loadCsvFromGitHub(filename) {
     const res = await fetch(\`\${API_BASE}?filename=\${filename}\`);
     if (!res.ok) {
       const errorText = await res.text();
-      console.error("❌ Failed to load CSV from memory:", res.status, errorText);
+      console.error("\\u274C Failed to load CSV from memory:", res.status, errorText);
       throw new Error(\`Failed to load \${filename}\`);
     }
     const data = await res.text();
