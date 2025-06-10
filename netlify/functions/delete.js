@@ -1,17 +1,35 @@
 const fetch = require('node-fetch');
 
 exports.handler = async (event) => {
-  const token = process.env.GITHUB_TOKEN;
-  const { filePath } = JSON.parse(event.body);
-  const repo = process.env.REPO_NAME;
-  const owner = process.env.REPO_OWNER;
-
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
-
   try {
+    const token = process.env.GITHUB_TOKEN;
+    const { filename } = JSON.parse(event.body);
+    const repo = process.env.REPO_NAME;
+    const owner = process.env.REPO_OWNER;
+
+    if (!token || !repo || !owner) {
+      console.error("❌ Missing environment variables.");
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: "Missing environment configuration." })
+      };
+    }
+
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}`;
+
     const res = await fetch(url, {
       headers: { Authorization: `token ${token}` }
     });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("❌ Failed to locate file before delete:", res.status, errorText);
+      return {
+        statusCode: res.status,
+        body: JSON.stringify({ error: "File not found or access denied", details: errorText })
+      };
+    }
+
     const data = await res.json();
     const sha = data.sha;
 
@@ -27,14 +45,26 @@ exports.handler = async (event) => {
       })
     });
 
+    const resultText = await del.text();
+
+    if (!del.ok) {
+      console.error("❌ GitHub delete failed:", del.status, resultText);
+      return {
+        statusCode: del.status,
+        body: JSON.stringify({ error: "GitHub delete failed", details: resultText })
+      };
+    }
+
+    console.log(`✅ Successfully deleted: ${filename}`);
     return {
-      statusCode: del.ok ? 200 : 500,
-      body: JSON.stringify({ ok: del.ok })
+      statusCode: 200,
+      body: JSON.stringify({ ok: true, filename })
     };
   } catch (err) {
+    console.error("❌ Error in delete function:", err.message);
     return {
-      statusCode: 404,
-      body: JSON.stringify({ error: 'File not found' })
+      statusCode: 500,
+      body: JSON.stringify({ error: "Unexpected error", message: err.message })
     };
   }
 };
