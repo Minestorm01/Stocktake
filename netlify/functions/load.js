@@ -8,10 +8,10 @@ exports.handler = async (event) => {
     const owner = process.env.REPO_OWNER || "";
 
     if (!token || !repo || !owner) {
-      console.error("❌ Missing required environment variables.");
+      console.log("ℹ️ GitHub env vars not set - returning disabled response");
       return {
-        statusCode: 500,
-        body: JSON.stringify({ error: "Missing required environment variables." })
+        statusCode: 200,
+        body: JSON.stringify({ disabled: true })
       };
     }
 
