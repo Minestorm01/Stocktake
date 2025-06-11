@@ -2,16 +2,16 @@ const fetch = require('node-fetch');
 
 exports.handler = async (event) => {
   try {
-    const token = process.env.GITHUB_TOKEN;
+    const token = process.env.GITHUB_TOKEN || "";
     const { filename } = JSON.parse(event.body);
-    const repo = process.env.REPO_NAME;
-    const owner = process.env.REPO_OWNER;
+    const repo = process.env.REPO_NAME || "";
+    const owner = process.env.REPO_OWNER || "";
 
     if (!token || !repo || !owner) {
-      console.error("❌ Missing environment variables.");
+      console.error("❌ Missing required environment variables.");
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: "Missing environment configuration." })
+        body: JSON.stringify({ error: "Missing required environment variables." })
       };
     }
 
