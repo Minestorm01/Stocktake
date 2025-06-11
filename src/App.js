@@ -22,13 +22,15 @@ function App() {
   useEffect(() => {
     const lastFile = localStorage.getItem('lastUsedFile');
     if (lastFile) {
-      loadCsvFromGitHub(lastFile).then((data) => {
+      loadCsvFromGitHub(lastFile, true).then((data) => {
         if (data) {
           setCsvData(data);
           setFilePath(lastFile);
           setFileLoaded(true);
           setHasScanned(false);
           console.log(`📂 Auto-loaded ${lastFile} from memory.`);
+        } else {
+          localStorage.removeItem('lastUsedFile');
         }
       });
     }
