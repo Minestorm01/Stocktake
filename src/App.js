@@ -21,7 +21,8 @@ function App() {
 
   useEffect(() => {
     const lastFile = localStorage.getItem('lastUsedFile');
-    if (lastFile) {
+    if (lastFile && lastFile !== 'untitled-spreadsheet---page-1.csv') {
+      console.log(`🔄 Attempting auto-load of ${lastFile}`);
       loadCsvFromGitHub(lastFile, true).then((data) => {
         if (data) {
           setCsvData(data);
@@ -43,6 +44,13 @@ function App() {
     const uploadedName = file.name.replace(/\s+/g, '-').toLowerCase();
     setFilePath(uploadedName);
     localStorage.setItem('lastUsedFile', uploadedName);
+    console.log(`⬆️ Uploading ${uploadedName}`);
+
+    // reset session state when new file chosen
+    setStaffNumber('');
+    setLocationNumber('');
+    setScreen('login');
+    setShowOptions(false);
 
     const remote = await loadCsvFromGitHub(uploadedName);
     if (remote) {
@@ -70,6 +78,11 @@ function App() {
       setFileLoaded(true);
       setHasScanned(false);
       localStorage.setItem('lastUsedFile', loadName);
+      setStaffNumber('');
+      setLocationNumber('');
+      setScreen('login');
+      setShowOptions(false);
+      console.log(`📂 Loaded existing ${loadName}`);
     } else {
       alert('File not found');
     }
@@ -117,11 +130,17 @@ function App() {
  
   function handleDelete() {
     deleteCsvFromGitHub(filePath);
+    localStorage.removeItem('lastUsedFile');
     setCsvData('');
     setFileLoaded(false);
     setHasScanned(false);
     setScreen('login');
     setShowOptions(false);
+    setStaffNumber('');
+    setLocationNumber('');
+    setLoadName('');
+    setFilePath('');
+    console.log('🗑️ Stocktake reset');
   }
 
   return (
