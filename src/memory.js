@@ -3,6 +3,29 @@ const LOAD_API = "/.netlify/functions/load";
 const DELETE_API = "/.netlify/functions/delete";
 const LOCAL_PREFIX = "stocktake_";
 
+// GitHub environment variables injected at build time
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_USERNAME = process.env.GITHUB_USERNAME;
+const GITHUB_REPO = process.env.GITHUB_REPO;
+const GITHUB_BRANCH = process.env.GITHUB_BRANCH;
+
+// Determine if GitHub integration should be active
+const githubEnabled = !!(
+  GITHUB_TOKEN &&
+  GITHUB_REPO &&
+  GITHUB_USERNAME &&
+  GITHUB_BRANCH
+);
+
+if (!githubEnabled) {
+  console.log("⚠️ GitHub integration disabled due to missing env vars:", {
+    GITHUB_TOKEN: GITHUB_TOKEN ? "✅" : "❌",
+    GITHUB_REPO,
+    GITHUB_USERNAME,
+    GITHUB_BRANCH,
+  });
+}
+
 function loadCsvLocally(filename) {
   const data = localStorage.getItem(LOCAL_PREFIX + filename);
   if (data) {
