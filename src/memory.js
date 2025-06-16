@@ -1,3 +1,5 @@
+import Papa from 'papaparse';
+
 const SAVE_API = "/.netlify/functions/save";
 const LOAD_API = "/.netlify/functions/load";
 const DELETE_API = "/.netlify/functions/delete";
