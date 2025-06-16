@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Papa from 'papaparse';
 import Scanner from './components/Scanner';
 import Report, { buildReport } from './components/Report';
 import {
   loadCsvFromGitHub,
   saveCsvToGitHub,
-  deleteCsvFromGitHub
+  deleteCsvFromGitHub,
+  parseVarianceCsv
 } from './memory';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
   const [locationNumber, setLocationNumber] = useState('');
   const [loadName, setLoadName] = useState('');
   const [hasScanned, setHasScanned] = useState(false);
+  const varianceInputRef = useRef(null);
 
   useEffect(() => {
     const lastFile = localStorage.getItem('lastUsedFile');
@@ -43,7 +45,7 @@ function App() {
 
     const uploadedName = file.name.replace(/\s+/g, '-').toLowerCase();
     setFilePath(uploadedName);
-    localStorage.setItem('lastUsedFile', uploadedName);
+@@ -47,50 +49,75 @@ function App() {
     console.log(`⬆️ Uploading ${uploadedName}`);
 
     // reset session state when new file chosen
@@ -67,6 +69,31 @@ function App() {
       };
       reader.readAsText(file);
     }
+  }
+
+  function handleVarianceUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const uploadedName = file.name.replace(/\s+/g, '-').toLowerCase();
+    setFilePath(uploadedName);
+    localStorage.setItem('lastUsedFile', uploadedName);
+    console.log(`⬆️ Importing variance ${uploadedName}`);
+
+    setStaffNumber('');
+    setLocationNumber('');
+    setScreen('login');
+    setShowOptions(false);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const csv = parseVarianceCsv(event.target.result);
+      setCsvData(csv);
+      setFileLoaded(true);
+      setHasScanned(false);
+    };
+    reader.readAsText(file);
+    e.target.value = null;
   }
 
   async function handleLoadExisting() {
@@ -94,39 +121,7 @@ function App() {
   }
   function downloadCsv() {
     const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', filePath || 'stocktake.csv');
-    link.click();
-  }
-
-  function saveVarianceReport() {
-    const dataRows = buildReport(csvData);
-    const variancesOnly = dataRows.filter(r => r['VARIANCE UNITS'] !== 0);
-    const columns = [
-      'ITEM',
-      'DESCRIPTION',
-      'OLD SKU NO.',
-      'STATUS',
-      'BOOK UNITS',
-      'ACTUAL UNITS',
-      'VARIANCE UNITS',
-      'RETAIL PRICE',
-      'PREVIOUS COUNT',
-      'LOCATION',
-      'COUNTED TWICE',
-      'TRANSFER FLAG'
-    ];
-    const content = Papa.unparse(variancesOnly, { columns });
-    const defaultName = `variance-${Date.now()}.csv`;
-    const name = prompt('Filename for save', defaultName);
-    if (name) {
-      const filename = name.endsWith('.csv') ? name : `${name}.csv`;
-      saveCsvToGitHub(filename, content);
-    }
-  }
-
+@@ -130,50 +157,60 @@ function App() {
  
   function handleDelete() {
     deleteCsvFromGitHub(filePath);
@@ -152,6 +147,16 @@ function App() {
         {!fileLoaded ? (
           <div>
             <input type="file" accept=".csv" onChange={handleUpload} />
+            <button onClick={() => varianceInputRef.current && varianceInputRef.current.click()} style={{ marginLeft: '10px' }}>
+              🧩 Continue From Variance CSV
+            </button>
+            <input
+              type="file"
+              accept=".csv"
+              ref={varianceInputRef}
+              style={{ display: 'none' }}
+              onChange={handleVarianceUpload}
+            />
             <div style={{ marginTop: '10px' }}>
               <input
                 type="text"
