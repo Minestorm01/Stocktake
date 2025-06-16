@@ -130,3 +130,55 @@ export async function deleteCsvFromGitHub(filename, silent = false) {
     if (!silent) alert("Deleted locally due to error: " + err.message);
   }
 }
+
+export function parseVarianceCsv(text) {
+  const parsed = Papa.parse(text, { header: true });
+  const rows = [];
+
+  parsed.data.forEach((row) => {
+    const sku = row['SKU'] || row['Item'] || row['ITEM'] || row['Sku'];
+    if (!sku) return;
+    const description = row['Description'] || row['DESCRIPTION'] || '';
+    const soh = parseInt(row['SOH'] || row['BOOK UNITS'] || 0, 10) || 0;
+    const locField = row['Locations Scanned'] || row['Locations'] || row['LOCATION'] || '';
+    const locations = [];
+    if (locField && locField.trim()) {
+      const parts = locField.split(',');
+      parts.forEach((p) => {
+        const clean = p.trim().replace(/^"|"$/g, '');
+        if (!clean) return;
+        const match = clean.match(/(\d+)x\s*(.+)/i);
+        if (match) {
+          const count = parseInt(match[1], 10) || 1;
+          const loc = match[2].trim();
+          for (let i = 0; i < count; i++) locations.push(loc);
+        } else {
+          locations.push(clean);
+        }
+      });
+    }
+    rows.push({ SKU: sku, Description: description, SOH: soh, locations });
+  });
+
+  const baseRows = rows.map((r) => ({ SKU: r.SKU, Description: r.Description, SOH: r.SOH }));
+  const scannedRows = [];
+  rows.forEach((r) => {
+    r.locations.forEach((loc) => {
+      scannedRows.push({
+        SKU: r.SKU,
+        Description: r.Description,
+        SOH: 0,
+        LOCATION: loc,
+        'SCANNED/TYPED': 'S',
+      });
+    });
+  });
+
+  const columns = ['SKU', 'Description', 'SOH'];
+  if (scannedRows.length) {
+    if (!columns.includes('LOCATION')) columns.push('LOCATION');
+    if (!columns.includes('SCANNED/TYPED')) columns.push('SCANNED/TYPED');
+  }
+
+  return Papa.unparse([...baseRows, ...scannedRows], { columns });
+}
