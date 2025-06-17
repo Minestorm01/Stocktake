@@ -21,6 +21,7 @@ function App() {
   const [hasScanned, setHasScanned] = useState(false);
   const varianceInputRef = useRef(null);
 
+ 
   useEffect(() => {
     const lastFile = localStorage.getItem('lastUsedFile');
     if (lastFile && lastFile !== 'untitled-spreadsheet---page-1.csv') {
@@ -45,7 +46,7 @@ function App() {
 
     const uploadedName = file.name.replace(/\s+/g, '-').toLowerCase();
     setFilePath(uploadedName);
-@@ -47,50 +49,75 @@ function App() {
+    localStorage.setItem('lastUsedFile', uploadedName);
     console.log(`⬆️ Uploading ${uploadedName}`);
 
     // reset session state when new file chosen
@@ -70,19 +71,18 @@ function App() {
       reader.readAsText(file);
     }
   }
-
   function handleVarianceUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    const uploadedName = file.name.replace(/\s+/g, '-').toLowerCase();
+    const uploadedName = file.name.replace(/\s+/g, "-").toLowerCase();
     setFilePath(uploadedName);
-    localStorage.setItem('lastUsedFile', uploadedName);
+    localStorage.setItem("lastUsedFile", uploadedName);
     console.log(`⬆️ Importing variance ${uploadedName}`);
 
-    setStaffNumber('');
-    setLocationNumber('');
-    setScreen('login');
+    setStaffNumber("");
+    setLocationNumber("");
+    setScreen("login");
     setShowOptions(false);
 
     const reader = new FileReader();
@@ -95,6 +95,7 @@ function App() {
     reader.readAsText(file);
     e.target.value = null;
   }
+
 
   async function handleLoadExisting() {
     if (!loadName) return;
@@ -121,7 +122,39 @@ function App() {
   }
   function downloadCsv() {
     const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
-@@ -130,50 +157,60 @@ function App() {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filePath || 'stocktake.csv');
+    link.click();
+  }
+
+  function saveVarianceReport() {
+    const dataRows = buildReport(csvData);
+    const variancesOnly = dataRows.filter(r => r['VARIANCE UNITS'] !== 0);
+    const columns = [
+      'ITEM',
+      'DESCRIPTION',
+      'OLD SKU NO.',
+      'STATUS',
+      'BOOK UNITS',
+      'ACTUAL UNITS',
+      'VARIANCE UNITS',
+      'RETAIL PRICE',
+      'PREVIOUS COUNT',
+      'LOCATION',
+      'COUNTED TWICE',
+      'TRANSFER FLAG'
+    ];
+    const content = Papa.unparse(variancesOnly, { columns });
+    const defaultName = `variance-${Date.now()}.csv`;
+    const name = prompt('Filename for save', defaultName);
+    if (name) {
+      const filename = name.endsWith('.csv') ? name : `${name}.csv`;
+      saveCsvToGitHub(filename, content);
+    }
+  }
+
  
   function handleDelete() {
     deleteCsvFromGitHub(filePath);
