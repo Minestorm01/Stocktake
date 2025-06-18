@@ -20,6 +20,7 @@ function App() {
   const [loadName, setLoadName] = useState('');
   const [hasScanned, setHasScanned] = useState(false);
   const varianceInputRef = useRef(null);
+  const oldInputRef = useRef(null);
 
  
   useEffect(() => {
@@ -71,7 +72,7 @@ function App() {
       reader.readAsText(file);
     }
   }
-  function handleVarianceUpload(e) {
+    function handleVarianceUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -91,6 +92,37 @@ function App() {
       setCsvData(csv);
       setFileLoaded(true);
       setHasScanned(false);
+    };
+    reader.readAsText(file);
+    e.target.value = null;
+  }
+
+  function handleOldUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const uploadedName = file.name.replace(/\s+/g, '-').toLowerCase();
+    setFilePath(uploadedName);
+    localStorage.setItem('lastUsedFile', uploadedName);
+    console.log(`📂 Loading old stocktake ${uploadedName}`);
+
+    setStaffNumber('');
+    setLocationNumber('');
+    setScreen('login');
+    setShowOptions(false);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const csv = parseVarianceCsv(event.target.result);
+      setCsvData(csv);
+      setFileLoaded(true);
+      setHasScanned(false);
+      try {
+        localStorage.setItem('stocktake_' + uploadedName, csv);
+        console.log(`💾 Saved ${uploadedName} to localStorage`);
+      } catch (err) {
+        console.error('Failed to store file', err);
+      }
     };
     reader.readAsText(file);
     e.target.value = null;
@@ -183,12 +215,22 @@ function App() {
             <button onClick={() => varianceInputRef.current && varianceInputRef.current.click()} style={{ marginLeft: '10px' }}>
               🧩 Continue From Variance CSV
             </button>
+            <button onClick={() => oldInputRef.current && oldInputRef.current.click()} style={{ marginLeft: '10px' }}>
+              📂 Load Old Stocktake
+            </button>
             <input
               type="file"
               accept=".csv"
               ref={varianceInputRef}
               style={{ display: 'none' }}
               onChange={handleVarianceUpload}
+            />
+            <input
+              type="file"
+              accept=".csv"
+              ref={oldInputRef}
+              style={{ display: 'none' }}
+              onChange={handleOldUpload}
             />
             <div style={{ marginTop: '10px' }}>
               <input
